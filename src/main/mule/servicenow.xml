@@ -42,7 +42,6 @@ output application/json
 payload]]></ee:set-payload>
 			</ee:message>
 		</ee:transform>
-		<logger level="INFO" doc:name="Logger" doc:id="83ca3a5b-85cd-413f-98d7-d9fd16247033" message="#[payload]"/>
 	</flow>
 	
 	<flow name="servicenowFlow1" doc:id="b90838dc-aba2-442f-9d27-aec62253ed76" >
