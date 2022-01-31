@@ -1,0 +1,25 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<types:mule xmlns:types="http://www.mulesoft.org/schema/mule/types">
+  <types:catalog>
+    <types:type name="sn" format="json">
+      <types:shape format="weave" example="examples/sn.json"><![CDATA[%dw 2.0
+
+type sn = {|
+  comments: String, 
+  short_description: String, 
+  state: String
+|} {"example": "{\\\"comments\\\":\\\"in urgent need of server restart\\\",\\\"short_description\\\":\\\"Server Down - Restart\\\",\\\"state\\\":\\\"New\\\"}"}
+
+]]></types:shape>
+    </types:type>
+  </types:catalog>
+  <types:enrichment select="#32572712-63a3-434e-b2c3-6cbeaa0c7039">
+    <types:processor-declaration>
+      <types:input-event>
+        <types:message>
+          <types:payload type="sn"/>
+        </types:message>
+      </types:input-event>
+    </types:processor-declaration>
+  </types:enrichment>
+</types:mule>

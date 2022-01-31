@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:servicenow="http://www.mulesoft.org/schema/mule/servicenow" xmlns:java="http://www.mulesoft.org/schema/mule/java"
+	xmlns:ee="http://www.mulesoft.org/schema/mule/ee/core"
+	xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/ee/core http://www.mulesoft.org/schema/mule/ee/core/current/mule-ee.xsd
+http://www.mulesoft.org/schema/mule/java http://www.mulesoft.org/schema/mule/java/current/mule-java.xsd
+http://www.mulesoft.org/schema/mule/servicenow http://www.mulesoft.org/schema/mule/servicenow/current/mule-servicenow.xsd">
+	<http:listener-config name="HTTP_Listener_config" doc:name="HTTP Listener config" doc:id="9b4cf9dd-96b8-4c57-80e2-a905c36fee95" >
+		<http:listener-connection host="0.0.0.0" port="8081" />
+	</http:listener-config>
+	<servicenow:config name="ServiceNow_Config" doc:name="ServiceNow Config" doc:id="607af01d-eeee-4a82-91c1-c1b2b69d1e21" >
+		<servicenow:basic-connection username="admin" password="WjJw2G8gonUW" serviceAddress="https://dev88183.service-now.com"/>
+	</servicenow:config>
+	<http:request-config name="HTTP_Request_configuration" doc:name="HTTP Request configuration" doc:id="5f98cd6a-d9e3-4dbd-a200-26d391e97f30" >
+		<http:request-connection protocol="HTTPS" host="dev88183.service-now.com" port="443" />
+	</http:request-config>
+	<flow name="servicenowFlow" doc:id="ed541b7b-ebfc-4eac-859a-851fd4a71429" >
+		<http:listener doc:name="Listener" doc:id="7dc7f63b-b5c0-4599-8ccd-f2ac3c10558f" config-ref="HTTP_Listener_config" path="/sn"/>
+		<ee:transform doc:name="Transform Message" doc:id="32572712-63a3-434e-b2c3-6cbeaa0c7039" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/xml
+ns ns0 http://www.service-now.com/incident
+---
+{
+	ns0#insert: {
+		comments: payload.comments,
+		short_description: payload.short_description
+		
+	}
+}]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<servicenow:invoke doc:name="Invoke" doc:id="ea8ca09f-18bf-46bc-86af-95d3af9ab6a0" config-ref="ServiceNow_Config" service="incident" operation="insert" showReferenceValues="ALL"/>
+		<ee:transform doc:name="Transform Message" doc:id="fa273651-dbf5-4094-a7c7-4237d333167f" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="83ca3a5b-85cd-413f-98d7-d9fd16247033" message="#[payload]"/>
+	</flow>
+	
+	<flow name="servicenowFlow1" doc:id="b90838dc-aba2-442f-9d27-aec62253ed76" >
+		<http:listener doc:name="Listener" doc:id="1a6100ae-ad09-41d9-944e-a8447ed0653a" config-ref="HTTP_Listener_config" path="/sn2"/>
+		<http:request method="GET" doc:name="Request" doc:id="f99440eb-e567-4c0a-b718-819315c8e8e6" config-ref="HTTP_Request_configuration" path="/api/now/attachment/{sys-api}/file">
+			<http:uri-params><![CDATA[#[output application/json
+---
+{
+	"sys-api" : payload.sysapi
+}]]]></http:uri-params>
+		</http:request>
+		<servicenow:invoke doc:name="Invoke" doc:id="0be51728-38ea-428e-a38a-a586de1cafd0" config-ref="ServiceNow_Config" service="incident" operation="get" showReferenceValues="ALL"/>
+		<ee:transform doc:name="Transform Message" doc:id="e33e7edc-27d8-414a-a728-41cba6810e91" >
+			<ee:message >
+				<ee:set-payload ><![CDATA[%dw 2.0
+output application/json
+---
+payload]]></ee:set-payload>
+			</ee:message>
+		</ee:transform>
+		<logger level="INFO" doc:name="Logger" doc:id="8f47dd7a-5119-4146-a73a-29cd895d903f" message="#[payload]"/>
+	</flow>
+</mule>
